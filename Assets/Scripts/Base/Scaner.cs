@@ -5,54 +5,27 @@ using System.Collections.Generic;
 
 public class Scaner : MonoBehaviour
 {
-    [SerializeField] private Transform _resourceParent;
+    [SerializeField] private ResourcesDataBase _dataBase;
     [SerializeField] private float _scanTimer = 3f;
-
-    private const bool IsAssigned = true;
-
-    private Dictionary<Resource, bool> _pendingResource = new Dictionary<Resource, bool>();
-
+    [SerializeField] private float _scanRadius = 45f;
+    
     private void Start()
     {
         StartCoroutine(ScanTick());
     }
 
-    public bool TryGetUnassignedResource(out Resource resource)
-    {
-        foreach(KeyValuePair<Resource, bool> pair in _pendingResource)
-        {
-            if (pair.Value == false)
-            {
-                resource = pair.Key;
-                _pendingResource[resource] = IsAssigned;
-                return true;
-            }
-        }
-
-        resource = null;
-        return false;
-    }
-
-    public void RemoveResource(Resource resource)
-    {
-        _pendingResource.Remove(resource);
-    }
-
     private void ScanLevel()
     {
-        Resource[] allResources = _resourceParent.GetComponentsInChildren<Resource>();
+        List<Resource> allFoundResources = new List<Resource>();
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, _scanRadius);
 
-        foreach(Resource resource in allResources)
+        foreach (var hitCollider in hitColliders)
         {
-            try
-            {
-                _pendingResource.Add(resource, !IsAssigned);
-            }
-            catch (ArgumentException)
-            {
-                Console.WriteLine("An element with Key already exists.");
-            }
+            if(hitCollider.TryGetComponent(out Resource foundResource))
+                allFoundResources.Add(foundResource);
         }
+
+        _dataBase.OperateFoundResources(allFoundResources);
     }
 
     private IEnumerator ScanTick()
@@ -66,5 +39,4 @@ public class Scaner : MonoBehaviour
             yield return wait;
         }
     }
-
 }

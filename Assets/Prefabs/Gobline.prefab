@@ -121,6 +121,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4899add9b637c8440b3ec5556a3fb25a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 912965876433156419}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4899add9b637c8440b3ec5556a3fb25a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 694833181038692780}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4899add9b637c8440b3ec5556a3fb25a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8729734711381781915}
   m_SourcePrefab: {fileID: 100100000, guid: 4899add9b637c8440b3ec5556a3fb25a, type: 3}
 --- !u!4 &7270091508525454840 stripped
 Transform:
@@ -163,7 +169,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 8047753424320466754}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.36
+  m_Radius: 0.4
   m_Speed: 3.9
   m_Acceleration: 8
   avoidancePriority: 50
@@ -172,8 +178,8 @@ NavMeshAgent:
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 1
-  m_Height: 2
-  m_BaseOffset: 0.3
+  m_Height: 1.62
+  m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
 --- !u!54 &5759797842727061521
@@ -222,10 +228,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.31864262
+  m_Radius: 0.24479437
   m_Height: 1.7941115
   m_Direction: 1
-  m_Center: {x: 0, y: 0.8075732, z: -0.18135738}
+  m_Center: {x: 0, y: 0.8075732, z: -0.25520563}
 --- !u!114 &912965876433156419
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -238,8 +244,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 43f3ddb03ebfe054eb807dba8374ca44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Unit
-  _target: {fileID: 0}
   _carryingPoint: {fileID: 8992030202929782789}
   _baseStock: {fileID: 0}
+  _mover: {fileID: 8729734711381781915}
+--- !u!114 &694833181038692780
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8047753424320466754}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a73077c3a0e2e6479d361e5a71230c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimatorAgent
   _animator: {fileID: 7708960617750858709}
+--- !u!114 &8729734711381781915
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8047753424320466754}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3846ad5f478bad4ca904345baa3afbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NavMeshMover
   _agent: {fileID: 3013374583004836122}
+  _animatorAgent: {fileID: 694833181038692780}

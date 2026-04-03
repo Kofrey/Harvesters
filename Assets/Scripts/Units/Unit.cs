@@ -1,47 +1,38 @@
 using UnityEditor.VersionControl;
 using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
-
 public class Unit : MonoBehaviour
 {
-    [SerializeField] private Transform _target;
     [SerializeField] private Transform _carryingPoint;
     [SerializeField] private Transform _baseStock;
-    [SerializeField] private Animator _animator;
-    [SerializeField] private UnityEngine.AI.NavMeshAgent _agent;
+    [SerializeField] private NavMeshMover _mover;
 
-    private Vector3 _lastPosition;
-    private float _checkTargetTime = 0.3f;
-    private float _checkTimer;
     private float _distanceToTakeResource = 0.8f;
     private float _distanceToRaycastResource = 5f;
-    private Coroutine _moveCoroutine;
-    private Vector3 _targetPosition;
-    private bool _isReturning = false;
+    private State _state;
+    private Resource _carryingResource;    
 
-    private Resource _carryingResource;
-
-    private static int s_isMoveSelf;
-
-    public bool IsActive => _target != null;
+    public bool IsActive => _state != State.Idle;
     public bool HaveResource => _carryingResource != null;
-    public bool IsReturning => _isReturning;
+
+    public event Action<Unit> ReturnToBase;
 
     private void Awake()
     {
-        s_isMoveSelf = Animator.StringToHash("isMoveSelf");
-        _lastPosition = transform.position;
-        _checkTimer = 0;
-        _moveCoroutine = StartCoroutine(MoveToTarget(_checkTargetTime));
+        _state = State.Idle;
     }
 
-    public void SetTarget(Transform transform)
+    private void OnEnable()
     {
-        _target = transform;
-        _targetPosition = transform.position;
-        _agent.SetDestination(_target.position);      
+        _mover.ReachedTarget += OnReachedTarget;
+    }
+
+    private void OnDisable()
+    {
+        _mover.ReachedTarget -= OnReachedTarget;
     }
 
     public void SetBase(Transform transform)
@@ -51,8 +42,8 @@ public class Unit : MonoBehaviour
 
     public void Refresh()
     {
-        _target = null;
-        _isReturning = false;
+        _mover.SetTarget(null);
+        _state = State.Idle;
     }
 
     public Resource GetResource()
@@ -62,10 +53,37 @@ public class Unit : MonoBehaviour
         return resource;
     }
 
-    private void TryTakeResource()
+    public void SetGoal(Transform targetTransform, State state)
+    {
+        _state = state;
+        _mover.SetTarget(targetTransform);
+    }
+
+    public enum State
+    {
+        Idle,
+        Harvesting,
+        Returning
+    }
+
+    private void OnReachedTarget(Vector3 targetPosition)
+    {   
+        switch(_state)
+        {
+            case State.Harvesting:
+                TryTakeResource(targetPosition);
+                break;
+
+            case State.Returning:
+                ReturnToBase?.Invoke(this);
+                break;
+        }
+    }
+
+    private void TryTakeResource(Vector3 targetPosition)
     {
         RaycastHit[] hits;
-        hits = Physics.RaycastAll(_carryingPoint.position, (_targetPosition - _carryingPoint.position), _distanceToRaycastResource);
+        hits = Physics.RaycastAll(_carryingPoint.position, (targetPosition - _carryingPoint.position), _distanceToRaycastResource);
 
         foreach (RaycastHit hit in hits)
         {
@@ -78,43 +96,6 @@ public class Unit : MonoBehaviour
             }
         }
 
-        _isReturning = true;
-        SetTarget(_baseStock);
-    }
-
-    private IEnumerator MoveToTarget(float checkTime)
-    {   
-        if (_target == null)
-            yield return null;
-
-        while(enabled)
-        {
-            if (_checkTimer < checkTime)
-            {
-                _checkTimer += Time.deltaTime;
-            }
-            else
-            {
-                if (IsTargetReached(_targetPosition - transform.position, _distanceToTakeResource) && !_isReturning)
-                {
-                    TryTakeResource();
-                }
-
-                if (transform.position != _lastPosition)
-                    _animator.SetBool(s_isMoveSelf, true);
-                else
-                    _animator.SetBool(s_isMoveSelf, false);
-        
-                _lastPosition = transform.position;
-                _checkTimer += Time.deltaTime - checkTime;
-            }
-
-            yield return null;
-        }    
-    }
-
-    private bool IsTargetReached(Vector3 distance, float distanceToCheck)
-    {
-        return distance.sqrMagnitude < distanceToCheck * distanceToCheck;
+        SetGoal(_baseStock, State.Returning);
     }
 }

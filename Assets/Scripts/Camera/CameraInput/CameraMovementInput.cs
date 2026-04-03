@@ -1,28 +1,30 @@
 using UnityEngine;
+using System;
 
 [RequireComponent(typeof(Camera))]
-public class CameraMovementInput : CameraMovementInputBase
+public class CameraMovementInput : MonoBehaviour
 {
     [SerializeField] private LayerMask _clickableMask;
 
+    private KeyCode _buttonKey = KeyCode.Mouse0;
     private bool _dragEnabled;
     private Camera _camera;
 
-    protected override void Awake()
-    {
-        base.Awake();
+    public event Action<Vector3> InputPerformed;
 
+    private void Awake()
+    {
         _camera = GetComponent<Camera>();
     }
 
-    protected override ICameraMovementHandler CreateMovementHandler()
+    private void Update()
     {
-        return new SmoothCameraMovementHandler(_properties);
+        InputPerformed?.Invoke(ReadInput());     
     }
 
-    protected override Vector3 ReadInputDelta()
+    private Vector3 ReadInput()
     {
-        if(Input.GetMouseButtonDown(0))
+        if(Input.GetKeyDown(_buttonKey))
         {
             if(IsClickedOnGround())
             {
@@ -32,13 +34,14 @@ public class CameraMovementInput : CameraMovementInputBase
             return Vector3.zero;
         }
 
-        if(Input.GetMouseButtonUp(0))
+        if(Input.GetKeyUp(_buttonKey))
         {
             _dragEnabled = false;
+
             return Vector3.zero;
         }
 
-        if (_dragEnabled && Input.GetMouseButton(0))
+        if (_dragEnabled && Input.GetKey(_buttonKey))
         {
             return Input.mousePositionDelta;
         }

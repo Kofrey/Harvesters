@@ -1,17 +1,27 @@
 using UnityEngine;
 
-public class SmoothCameraMovementHandler : ICameraMovementHandler
+public class SmoothCameraMovementHandler : MonoBehaviour
 {
-    private readonly CameraMovementProperties _properties;
-    private Vector3 _cachedCameraPosition;
+    [SerializeField] private CameraMovementProperties _properties;
+    [SerializeField] private Vector3 _cachedCameraPosition;
+    [SerializeField] private CameraMovementInput _cameraInput;
 
-    public SmoothCameraMovementHandler(CameraMovementProperties properties)
+    private void Start()
     {
-        _properties = properties;
-        _cachedCameraPosition = properties.Pivot.position;
+        _cachedCameraPosition = _properties.Pivot.position;
     }
 
-    public void Move(Vector3 inputDelta)
+    private void OnEnable()
+    {
+        _cameraInput.InputPerformed += OnInputPerformed;
+    }
+
+    private void OnDisable()
+    {
+        _cameraInput.InputPerformed -= OnInputPerformed;
+    }
+
+    private void OnInputPerformed(Vector3 inputDelta)
     {
         _cachedCameraPosition += new Vector3(inputDelta.x, 0, inputDelta.y) * _properties.Speed;
 

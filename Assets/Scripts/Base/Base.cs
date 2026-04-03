@@ -6,44 +6,57 @@ using System.Collections.Generic;
 public class Base : MonoBehaviour
 {
     [SerializeField] private Scaner _scaner;
-    [SerializeField] private Transform _baseStockPoint;
+    [SerializeField] private ResourcesDataBase _resourcesData;
+    [SerializeField] private BaseSpawner _spawner;
     [SerializeField] private float _gatheringTimer = 1f;
     [SerializeField] private List<Unit> _harvesters;
 
-    private BaseStockTrigger _trigger;
     private Coroutine _coroutine;
     private int _stockResources = 0;
+    private int _resourcesRequireForSpawn = 3;
+    private int _resourcesRequireForBuild = 5;
         
     private void Start()
     {
-        _trigger = _baseStockPoint.GetComponent<BaseStockTrigger>();
-        _trigger.UnitEnterTrigger += OnUnitEnterTrigger;
         StartCoroutine(GatherTick());  
+    }
+
+    private void OnEnable()
+    {
+        foreach(Unit unit in _harvesters)
+            unit.ReturnToBase += OnUnitReturn;
+    }
+
+    private void OnDisable()
+    {
+        foreach(Unit unit in _harvesters)
+            unit.ReturnToBase -= OnUnitReturn;
     }
 
     private void GatherResource()
     {
-        while (TryFindInactiveHarvester(out Unit harvester) && _scaner.TryGetUnassignedResource(out Resource resource))
+        while (TryFindInactiveHarvester(out Unit harvester) && _resourcesData.TryGetResource(out Resource resource))
         {
-            harvester.SetTarget(resource.transform);
+            harvester.SetGoal(resource.transform, Unit.State.Harvesting);
         }
     }
 
     private void StoreResource(Unit unit)
     {
         Resource resource = unit.GetResource();
-        _scaner.RemoveResource(resource);
-        Destroy(resource.gameObject);
+        _resourcesData.EraseResourceData(resource);
+        resource.ProcessConsumption();
         _stockResources++;
+        OnResourceAmountChanged();
     }
 
-    private void OnUnitEnterTrigger(Unit unit)
+    private void OnUnitReturn(Unit unit)
     {
         if (unit.HaveResource)
             StoreResource(unit);
 
-        if (unit.IsActive && unit.IsReturning)
-            unit.Refresh();
+        unit.SetGoal(null, Unit.State.Idle);
+        //unit.Refresh();
     }
 
     private bool TryFindInactiveHarvester(out Unit inactiveHarvester)
@@ -70,6 +83,17 @@ public class Base : MonoBehaviour
             GatherResource();
 
             yield return wait;
+        }
+    }
+
+    private void OnResourceAmountChanged()
+    {
+        if (_spawner.IsSpawning && _stockResources >= _resourcesRequireForSpawn)
+        {
+            _stockResources -= _resourcesRequireForSpawn;
+            Unit newHarvester = _spawner.GetUnit();
+            newHarvester.ReturnToBase += OnUnitReturn;
+            _harvesters.Add(newHarvester);
         }
     }
 }

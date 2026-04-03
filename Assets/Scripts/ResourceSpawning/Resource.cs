@@ -1,4 +1,2 @@
-using UnityEngine;
-
-public class Resource : MonoBehaviour
+public class Resource : SpawnedObject
 {}
